@@ -24,8 +24,8 @@ bool
 read_image(FILE * file, uint8_t ** destp, uint16_t * w, uint16_t * h)
 {
     uint8_t sig[8];
-    uint8_t * dest;
-    uint8_t ** rows;
+    uint8_t * dest = NULL;
+    uint8_t ** rows = NULL;
   
     if (fread(sig, 1, 8, file) != 8) {
         fprintf(stderr, "Failed to read PNG signature\n");

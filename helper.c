@@ -21,6 +21,7 @@ sig_handler(int sig)
     is_running = false;
 }
 
+
 void
 print_help(const char *argv[])
 {
