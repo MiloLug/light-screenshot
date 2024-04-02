@@ -1,9 +1,8 @@
-# light-status
+# light-screenshot
 
-A small utility that allows you to create basic floating windows to output any one-line text in them.
+A small utility for taking screenshots.
 
-It can be used to create some system UI, based on scripts and outputs of other programs (slstatus etc.):
-[![HKrurAP.md.png](https://iili.io/HKrurAP.md.png)](https://freeimage.host/i/HKrurAP)
+Among other benefits, it can 'freeze' the screen instantly, allowing for better area selection experience.
 
 ## Compilation Requirements
 ```
@@ -58,7 +57,8 @@ Flags:
 
 ```
 
-### Helper
+### Helper application
+It doesn't really make sense to use this separately, but just in case.
 
 ```sh
 Usage: <png-data> | light-screenshot-helper <flags>
