@@ -1,5 +1,5 @@
 # app version
-VERSION = 0.0.1
+VERSION = 0.1.0
 BIN_NAME = light-screenshot-helper
 
 # Customize below to fit your system
