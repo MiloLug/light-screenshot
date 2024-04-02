@@ -75,8 +75,8 @@ read_image(FILE * file, uint8_t ** destp, uint16_t * w, uint16_t * h)
     return true;
 
 error_end:
-    if (rows) free(rows);
-    if (dest) free(dest);
+    free(rows);
+    free(dest);
     if (png_ptr) png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
     return false;
 }

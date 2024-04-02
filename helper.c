@@ -19,9 +19,6 @@ static void
 sig_handler(int sig)
 {
     is_running = false;
-    if (sig == SIGINT || sig == SIGKILL) {
-        exit(0);
-    }
 }
 
 void
@@ -163,7 +160,7 @@ main (int argc, const char *argv[])
         FD_ZERO(&in_fds);
         FD_SET(x11_fd, &in_fds);
 
-        if (select(x11_fd + 1, &in_fds, 0, 0, &xev_timeout) == 0) {
+        if (select(x11_fd + 1, &in_fds, 0, 0, &xev_timeout) <= 0) {
             continue;
         }
 
