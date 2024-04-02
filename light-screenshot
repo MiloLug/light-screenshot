@@ -1,4 +1,5 @@
 #!/bin/sh
+set -o pipefail
 
 required_utils="maim xclip xdotool"
 
@@ -103,13 +104,19 @@ fi
 
 disp_pid=""
 if $instant && [ $area = "select" ]; then
-	maim -u | light-screenshot-helper $helper_attrs &
+	maim -u | light-screenshot-helper $helper_attrs 1>/dev/null &
 	disp_pid=$!
 
 	while [ -z "$(xdotool search --class "lscreen-helper")" ]; do
     	sleep 0\.05
 	done
 fi
+
+function on_exit {
+    kill -15 "$disp_pid" 1>/dev/null 2>&1
+}
+
+trap on_exit EXIT INT TERM HUP KILL
 
 case $area in
 	window)
@@ -132,15 +139,15 @@ case $area in
         ;;
 esac
 
-kill -15 "$disp_pid" 1>/dev/null 2>&1
-
 if [ -f "$file" ]; then
     if $use_clip; then
-        xclip -selection clipboard -target image/png -i "$file"
-        echo -n "$file" | xclip -selection primary
+        xclip -selection clipboard -target image/png -i "$file" 1>/dev/null
+        printf '%s' "$file" | xclip -selection primary 1>/dev/null
+    fi
+    if $use_file; then
+        printf '%s' "$file"
     fi
 else
     echo "Failed to save the screenshot"
     exit 1
 fi
-
