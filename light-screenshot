@@ -1,0 +1,146 @@
+#!/bin/sh
+
+required_utils="maim xclip xdotool"
+
+for util in $required_utils; do
+    if ! command -v $util 1>/dev/null 2>&1; then
+        echo "Required utility '$util' not found"
+        exit 1
+    fi
+done
+
+helper_attrs="-Xn lscreen-helper -Xc lscreen-helper"
+instant=false
+area="all"
+highlight=false
+use_clip=true
+use_file=true
+
+file="$HOME/Pictures/screenshots/$(date +'%Y-%m-%dT%H-%M-%SZ').png"
+
+help_text=\
+"Usage: ${0##*/} [flags]
+
+Flags:
+    --help             - display help
+
+        CAPTURING
+    -i, --instant      - freeze the screen before selecting, makes sense only with '-a select',
+                         DEFAULT = $instant
+    -a, --area <area>  - specify the area to capture,
+                         DEFAULT = $area
+    -h, --highlight    - add highlight color when selecting an area,
+                         DEFAULT = $highlight
+
+        OUTPUT
+    -s, --save         - save the screenshot to a file, return the path to the file,
+                         DEFAULT = $use_file
+    -c, --clipboard    - save the screenshot to the clipboard,
+                         DEFAULT = $use_clip
+    -p, --path <path>  - specify the full screenshot path (including the filename),
+                         PNG REQUIRED,
+                         DEFAULT = \$HOME/Pictures/screenshots/DATE-TIME.png
+    --helper-attrs     - specify the attributes for the helper window,
+                         see 'light-screenshot-helper --help' for more info,
+                         DEFAULT = $helper_attrs
+
+<area> can be:
+    window  - capture the active window
+    select  - select an area to capture
+    all     - capture the whole screen
+"
+
+while [ $# -gt 0 ]; do
+    arg="$1"
+    case $arg in
+        -i|--instant)
+            instant=true
+            ;;
+        -a|--area)
+            shift
+            area="$1"
+            ;;
+        -h|--highlight)
+            highlight=true
+            ;;
+        -s|--save)
+            use_file=true
+            ;;
+        -c|--clipboard)
+            use_clip=true
+            ;;
+        -p|--path)
+            shift
+            file="$1"
+            mkdir -p "$(dirname "$file")"
+            ;;
+        --helper-attrs)
+            shift
+            helper_attrs="$1"
+            ;;
+        --help)
+            echo "$help_text"
+            exit 0
+            ;;
+        *)
+            echo "$help_text"
+            exit 1
+            ;;
+    esac
+    shift
+done
+
+if ! $use_clip && ! $use_file; then
+    echo "Both clipboard and file saving are disabled"
+    echo "$help_text"
+    exit 1
+fi
+
+if ! $use_file; then
+    file="/tmp/__light-screenshot-tmp__.png"
+    rm -f "$file"
+fi
+
+disp_pid=""
+if $instant && [ $area = "select" ]; then
+	maim -u | light-screenshot-helper $helper_attrs &
+	disp_pid=$!
+
+	while [ -z "$(xdotool search --class "lscreen-helper")" ]; do
+    	sleep 0\.05
+	done
+fi
+
+case $area in
+	window)
+		maim -B -i $(xdotool getactivewindow) "$file"
+		;;
+	select)
+        if $highlight; then
+            maim -B -s -l -c 1,0\.6,0,0\.4 "$file"
+        else
+            maim -B -s "$file"
+        fi
+		;;
+	all)
+		maim -B "$file"
+		;;
+    *)
+        echo "Invalid area: $area"
+        echo "$help_text"
+        exit 1
+        ;;
+esac
+
+kill -15 "$disp_pid" 1>/dev/null 2>&1
+
+if [ -f "$file" ]; then
+    if $use_clip; then
+        xclip -selection clipboard -target image/png -i "$file"
+        echo -n "$file" | xclip -selection primary
+    fi
+else
+    echo "Failed to save the screenshot"
+    exit 1
+fi
+
